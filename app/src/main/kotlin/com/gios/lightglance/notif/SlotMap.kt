@@ -10,7 +10,11 @@ import com.gios.lightglance.Prefs
 object SlotMap {
 
     private val KNOWN = mapOf(
-        "com.craigeley.chat" to SlotSpec("Chat", Glyph.DOT),
+        // Both ids: the app was renamed com.craigeley.chat -> com.gios.lightchat, and
+        // an old build can still be installed alongside the new one. Same shape as the
+        // two deskclock packages below — they take separate slots, which is fine.
+        "com.gios.lightchat" to SlotSpec("LightChat", Glyph.DOT),
+        "com.craigeley.chat" to SlotSpec("LightChat", Glyph.DOT),
         "com.android.server.telecom" to SlotSpec("Missed call", Glyph.RING),
         "com.lightos" to SlotSpec("Messages", Glyph.SQUARE),
         "dev.imranr.obtainium" to SlotSpec("Updates", Glyph.FRAME),
