@@ -45,7 +45,7 @@ value, because in practice you glance at the phone rather than stare at it.
 
 | Glyph | Source | Package |
 |---|---|---|
-| ● filled circle | Chat | `com.craigeley.chat` |
+| ● filled circle | LightChat | `com.gios.lightchat` (and the old `com.craigeley.chat`) |
 | ○ ring | Missed call | `com.android.server.telecom` |
 | ▪ square | Messages | `com.lightos` |
 | ▫ frame | App updates | `dev.imranr.obtainium` |
