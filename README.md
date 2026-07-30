@@ -130,7 +130,8 @@ on/off receiver and the sensor hub both hang off it.
   so the AP stays asleep until it fires) and proximity for pocket suppression.
 - `GlanceController.kt` — decides whether to wake, and is mostly guards.
 - `GlanceActivity.kt` — the surface. `showWhenLocked`, `turnScreenOn`, brightness
-  override, burn-in jitter.
+  override, burn-in jitter. Takes no hardware keys.
+- `hw/` — the brightness wheel, turns only, for the setup screen.
 
 ### The four guards, and what each one prevents
 
@@ -155,6 +156,27 @@ mute your messages for a minute and a half.
 only the frame clock pauses, not `delay()`. The dwell could then fire `lockNow()`
 seconds after you'd moved on to another app, locking the phone in your hand.
 
+## The wheel
+
+The brightness wheel scrolls the setup screen, which is long — three adb commands, four
+status rows, a preview, and a row for every source the phone has ever notified about. That
+screen is also the one you read while the other hand is typing the commands into a computer.
+
+The ambient surface deliberately does not take the wheel. There is nothing to scroll there,
+and consuming a hardware key on a window shown over the keyguard is the same class of bug as
+[the four guards](#the-four-guards-and-what-each-one-prevents) exist to prevent: the surface
+is only ever a few seconds of black pixels, and anything it swallows is a key the user meant
+for the phone.
+
+Notches arrive as ordinary key events because Light patched
+`/system/usr/keylayout/Generic.kl`; `hw/LightKeys.kt` resolves `WHEEL_CCW` and `WHEEL_CW` by
+label at runtime and falls back to the raw scancode gated on the sensor's device name. Turns
+only — the click and the camera button belong to
+[LightControl](https://github.com/gi-os/LightControl), which owns them phone-wide and passes
+bare turns down so apps can scroll a notch at a time. The glide and the stray-brush guard are
+explained at length in
+[LightNews](https://github.com/gi-os/LightNews#the-wheel-and-the-camera-button).
+
 ## Burn-in
 
 Static white glyphs on OLED are the one failure mode here that is permanent, so the
@@ -167,7 +189,10 @@ white for the same reason — it's the largest lit area on the panel.
 - **The hardware brightness wheel.** The LPIII has a physical brightness control. If it
   clamps the window-level `screenBrightness` override, the ambient surface will come up
   at whatever the wheel says instead of 2%. `GlanceActivity.onCreate` is the line that
-  would appear to do nothing.
+  would appear to do nothing. Turning the wheel on the ambient surface also does nothing
+  at present, because LightControl passes bare turns through to `com.gios.*` and Glance
+  ignores them there on purpose — if that turns out to be the wrong call, the fix is to
+  treat a notch as a dismissal, not to scroll.
 - **`com.lightos` posts one coalesced record** (`id=0`), not one per message, so it's a
   boolean dot with no count. If `android.number` or a countable title turns up in its
   extras, `SlotMap` can start parsing it.

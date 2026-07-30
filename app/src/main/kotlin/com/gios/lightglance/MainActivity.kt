@@ -5,6 +5,7 @@ import android.content.ClipboardManager
 import android.content.ComponentName
 import android.service.notification.NotificationListenerService
 import android.os.Bundle
+import android.view.KeyEvent
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -29,6 +30,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -45,6 +47,11 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.gios.lightglance.hw.LightKey
+import com.gios.lightglance.hw.LightKeys
+import com.gios.lightglance.hw.LocalWheelBus
+import com.gios.lightglance.hw.WheelBus
+import com.gios.lightglance.hw.WheelScroll
 import com.gios.lightglance.notif.NotifListener
 import com.gios.lightglance.notif.NotifStore
 import com.gios.lightglance.notif.SlotMap
@@ -56,10 +63,52 @@ import com.gios.lightglance.ui.theme.LightGlanceTheme
 import com.gios.lightglance.ui.theme.RuleGrey
 import kotlinx.coroutines.delay
 
+/**
+ * The setup screen, and the only activity in the app that takes the wheel.
+ *
+ * [GlanceActivity] deliberately does not: it is an ambient surface that is supposed to
+ * light up, be read at a glance and go away, so scrolling it would be meaningless, and
+ * consuming a key there would be worse than meaningless — every guard in
+ * `GlanceController` exists to stop the app trapping the user, and swallowing a hardware
+ * key on a screen shown over the keyguard is exactly that shape of bug.
+ */
 class MainActivity : ComponentActivity() {
+
+    /** Wheel notches on their way to the setup screen. */
+    private val wheel = WheelBus()
+
+    /**
+     * Every hardware key arrives here first — `DecorView` hands the event to the window
+     * callback before it walks the view hierarchy — so a notch reaches the screen whatever
+     * happens to hold focus.
+     *
+     * Only the turns. The wheel click and the camera button belong to LightControl, which
+     * owns them phone-wide and passes bare turns through on purpose.
+     */
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        when (LightKeys.of(event)) {
+            LightKey.WheelUp -> {
+                if (event.action == KeyEvent.ACTION_DOWN) wheel.send(1)
+                return true
+            }
+            LightKey.WheelDown -> {
+                if (event.action == KeyEvent.ACTION_DOWN) wheel.send(-1)
+                return true
+            }
+            else -> Unit
+        }
+        return super.dispatchKeyEvent(event)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent { LightGlanceTheme { SetupScreen() } }
+        setContent {
+            LightGlanceTheme {
+                CompositionLocalProvider(LocalWheelBus provides wheel) {
+                    SetupScreen()
+                }
+            }
+        }
     }
 }
 
@@ -87,11 +136,16 @@ private fun SetupScreen() {
     val sleepOk = remember(tick) { Screen.canSleep(ctx) }
     val lastDecision = remember(tick) { GlanceController.lastSkipReason }
 
+    // A long screen: three adb commands, four status rows, a preview, and one row per
+    // source the phone has ever notified about.
+    val scroll = rememberScrollState()
+    WheelScroll(scroll)
+
     Column(
         Modifier
             .fillMaxSize()
             .background(Color.Black)
-            .verticalScroll(rememberScrollState())
+            .verticalScroll(scroll)
             .padding(horizontal = 22.dp, vertical = 26.dp),
     ) {
         Text("GLANCE", style = MaterialTheme.typography.labelLarge, color = Color.White)
