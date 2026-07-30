@@ -168,14 +168,45 @@ and consuming a hardware key on a window shown over the keyguard is the same cla
 is only ever a few seconds of black pixels, and anything it swallows is a key the user meant
 for the phone.
 
+That has one visible cost now that LightControl exists. LightControl passes bare turns through
+to `com.gios.*` rather than acting on them, and Glance ignores them on the ambient surface, so
+a turn there does nothing at all — where before it would have changed the brightness. The
+surface lasts a few seconds and the wheel keeps working the moment it goes, so this is a
+shrug rather than a bug; if it grates, the fix is to treat a notch as a dismissal, not to start
+scrolling black pixels.
+
 Notches arrive as ordinary key events because Light patched
 `/system/usr/keylayout/Generic.kl`; `hw/LightKeys.kt` resolves `WHEEL_CCW` and `WHEEL_CW` by
-label at runtime and falls back to the raw scancode gated on the sensor's device name. Turns
-only — the click and the camera button belong to
-[LightControl](https://github.com/gi-os/LightControl), which owns them phone-wide and passes
-bare turns down so apps can scroll a notch at a time. The glide and the stray-brush guard are
-explained at length in
+label at runtime and falls back to the raw scancode gated on the sensor's device name. The
+glide and the stray-brush guard are explained at length in
 [LightNews](https://github.com/gi-os/LightNews#the-wheel-and-the-camera-button).
+
+None of that needs anything else installed. The keys reach whichever app has focus and Glance
+reads its own, so there is no service to enable for scrolling, no permission and no root — the
+two grants in [Install](#install) are for the notifications and the screen, not the wheel.
+Turns only, though: the wheel click and the camera button are ignored here.
+[LightControl](https://github.com/gi-os/LightControl) is the optional app that gives them a
+job — hold the wheel in and turn for brightness, tap it for the flashlight, the camera button
+opens the camera, each rebindable to any installed app with tap and hold bound separately, plus
+brightness or a synthetic-swipe scroll for apps that don't read the wheel themselves. It does
+not take the setup screen's scrolling away, for the reason above.
+
+```bash
+# Optional: LightControl, for brightness, the flashlight and the camera button
+adb install -r LightControl-v1.0.x.apk
+
+# The key service. NOTE: this setting is a list, and this command REPLACES it —
+# if you also run LightVoice's push-to-talk, colon-join both components instead.
+adb shell settings put secure enabled_accessibility_services \
+  com.gios.lightcontrol/com.gios.lightcontrol.keys.ControlService
+adb shell settings put secure accessibility_enabled 1
+
+# Brightness, and the level readout + opening apps from the service
+adb shell appops set com.gios.lightcontrol WRITE_SETTINGS allow
+adb shell appops set com.gios.lightcontrol SYSTEM_ALERT_WINDOW allow
+```
+
+Latest APK: <https://github.com/gi-os/LightControl/releases/latest>
 
 ## Burn-in
 
@@ -189,10 +220,8 @@ white for the same reason — it's the largest lit area on the panel.
 - **The hardware brightness wheel.** The LPIII has a physical brightness control. If it
   clamps the window-level `screenBrightness` override, the ambient surface will come up
   at whatever the wheel says instead of 2%. `GlanceActivity.onCreate` is the line that
-  would appear to do nothing. Turning the wheel on the ambient surface also does nothing
-  at present, because LightControl passes bare turns through to `com.gios.*` and Glance
-  ignores them there on purpose — if that turns out to be the wrong call, the fix is to
-  treat a notch as a dismissal, not to scroll.
+  would appear to do nothing. What a turn on the ambient surface does today is settled and
+  written up in [The wheel](#the-wheel): nothing.
 - **`com.lightos` posts one coalesced record** (`id=0`), not one per message, so it's a
   boolean dot with no count. If `android.number` or a countable title turns up in its
   extras, `SlotMap` can start parsing it.
