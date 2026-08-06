@@ -41,7 +41,7 @@ default mode is `Poke`: wake for eight seconds when something arrives, wake on l
 sleep otherwise. That costs approximately nothing and delivers most of the value,
 because in practice you glance at the phone rather than stare at it.
 
-Built from the same plain-APK skeleton as the rest of the [gi-os Light App collection](https://github.com/gi-os/LightAuth#the-gi-os-light-app-collection),
+Built from the same plain-APK skeleton as the rest of the [gi-os Light App collection](https://github.com/gi-os/BrightAuthenticator#the-gi-os-light-app-collection),
 no SDK sandbox — `NotificationListenerService` reads standard Android notifications
 (LightOS posts fully standard ones), filtered by importance so it doesn't need a
 hand-maintained package list to stay useful.
@@ -79,7 +79,7 @@ leave it open while running the commands.
 
 | Glyph | Source | Package |
 |---|---|---|
-| ● filled circle | LightChat | `com.gios.lightchat` (and the old `com.craigeley.chat`) |
+| ● filled circle | BrightChat | `com.gios.lightchat` (and the old `com.craigeley.chat`) |
 | ○ ring | Missed call | `com.android.server.telecom` |
 | ▪ square | Messages | `com.lightos` |
 | ▫ frame | App updates | `dev.imranr.obtainium` |
@@ -128,7 +128,7 @@ status rows, a preview, and a row for every source the phone has ever notified a
 The ambient surface deliberately does **not** take the wheel: there's nothing to scroll
 there, and consuming a hardware key on a window shown over the keyguard is the same
 class of bug [the four guards](#the-four-guards-and-what-each-one-prevents) exist to
-prevent. That has one visible cost now that [LightControl](https://github.com/gi-os/LightControl)
+prevent. That has one visible cost now that [BrightControl](https://github.com/gi-os/BrightControl)
 exists — it passes bare turns through to `com.gios.*` rather than acting on them, and
 Glance ignores them on the ambient surface, so a turn there does nothing where before it
 would have changed the brightness. The surface lasts a few seconds and the wheel keeps
@@ -141,7 +141,7 @@ device name. No service to enable, no permission, no root — the two grants abo
 for the notifications and the screen, not the wheel.
 
 ```bash
-# Optional: LightControl, for brightness, the flashlight and the camera button
+# Optional: BrightControl, for brightness, the flashlight and the camera button
 adb install -r LightControl-v1.0.x.apk
 
 adb shell settings put secure enabled_accessibility_services \
@@ -151,7 +151,7 @@ adb shell appops set com.gios.lightcontrol WRITE_SETTINGS allow
 adb shell appops set com.gios.lightcontrol SYSTEM_ALERT_WINDOW allow
 ```
 
-Latest APK: https://github.com/gi-os/LightControl/releases/latest
+Latest APK: https://github.com/gi-os/BrightControl/releases/latest
 
 ## Architecture
 
@@ -241,7 +241,7 @@ Real tags, oldest to newest:
 | Version | What changed |
 | --- | --- |
 | v1.0.1 | Initial release — ambient notification dots, Poke/Always modes, the four guards |
-| v1.0.2 | Follows LightChat's package rename (`com.craigeley.chat` → `com.gios.lightchat`) in `SlotMap` |
+| v1.0.2 | Follows BrightChat's package rename (`com.craigeley.chat` → `com.gios.lightchat`) in `SlotMap` |
 | v1.0.3 | Hardware wheel scrolls the setup screen |
 | v1.0.4 | README: documents what a turn on the ambient surface does, and what the wheel needs |
 
