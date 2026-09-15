@@ -1,5 +1,7 @@
 # Glance
 
+[**⬇ Download the latest APK**](https://github.com/gi-os/LightGlance/releases/latest) · free, open source.
+
 Ambient notification dots for the **Light Phone III**. Package `com.gios.lightglance`.
 
 **Current version: v1.0.4.** See [Version history](#version-history).
