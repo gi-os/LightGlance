@@ -248,3 +248,9 @@ Real tags, oldest to newest:
 ## Licence
 
 No `LICENSE` file is committed in this repo yet.
+
+## Support
+
+These apps are free, open, and built on my own time. Sponsorship pays the bills that don't go away: build servers, test hardware, and the crash reporter that keeps them shipping. Donation or not my code is always free for the world to use.
+
+[Sponsor on GitHub](https://github.com/sponsors/gi-os)
